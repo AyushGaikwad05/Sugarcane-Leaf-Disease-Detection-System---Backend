@@ -1,9 +1,38 @@
+import os
+import json
 import ee
-from core.config import GEE_PROJECT_ID
+from google.auth import crypt
 
-ee.Initialize(project=GEE_PROJECT_ID)
+# ===========================
+# Initialize Google Earth Engine with service account JSON
+# ===========================
+
+# Load JSON from environment variable
+try:
+    service_account_info = json.loads(os.environ["GEE_SERVICE_ACCOUNT_JSON"])
+except KeyError:
+    raise EnvironmentError("GEE_SERVICE_ACCOUNT_JSON environment variable not set.")
+
+# ee.ServiceAccountCredentials expects a path to a file OR the private_key string
+# We'll write the JSON to a temporary file in-memory for initialization
+import tempfile
+
+with tempfile.NamedTemporaryFile(mode="w+", suffix=".json", delete=False) as f:
+    json.dump(service_account_info, f)
+    temp_key_path = f.name
+
+# Create credentials using temporary JSON file
+credentials = ee.ServiceAccountCredentials(
+    service_account_info["client_email"],
+    key_file=temp_key_path
+)
+
+ee.Initialize(credentials, project=service_account_info["project_id"])
 print("✅ Google Earth Engine initialized")
 
+# ===========================
+# NDVI Analysis Function
+# ===========================
 def analyze_ndvi(coordinates):
     geometry = ee.Geometry.Polygon(coordinates)
 
@@ -16,6 +45,9 @@ def analyze_ndvi(coordinates):
     )
 
     image = collection.first()
+    if image is None:
+        return {"mean_ndvi": 0, "status": "No Image Found", "map_url": None}
+
     ndvi = image.normalizedDifference(["B8", "B4"]).rename("NDVI").clip(geometry)
 
     stats = ndvi.reduceRegion(
