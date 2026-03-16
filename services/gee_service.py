@@ -1,45 +1,33 @@
-import os
-import json
 import ee
-from google.auth import crypt
+from core.config import settings
 
 # ===========================
-# Initialize Google Earth Engine with service account JSON
+# Initialize Google Earth Engine
 # ===========================
 
-# Load JSON from environment variable
 try:
-    service_account_info = json.loads(os.environ["GEE_SERVICE_ACCOUNT_JSON"])
-except KeyError:
-    raise EnvironmentError("GEE_SERVICE_ACCOUNT_JSON environment variable not set.")
+    # Use the JSON file path directly from settings
+    credentials = ee.ServiceAccountCredentials(
+        "", # We can leave email blank if the JSON file path is provided
+        key_file=settings.GEE_JSON_PATH
+    )
 
-# ee.ServiceAccountCredentials expects a path to a file OR the private_key string
-# We'll write the JSON to a temporary file in-memory for initialization
-import tempfile
-
-with tempfile.NamedTemporaryFile(mode="w+", suffix=".json", delete=False) as f:
-    json.dump(service_account_info, f)
-    temp_key_path = f.name
-
-# Create credentials using temporary JSON file
-credentials = ee.ServiceAccountCredentials(
-    service_account_info["client_email"],
-    key_file=temp_key_path
-)
-
-ee.Initialize(credentials, project=service_account_info["project_id"])
-print("✅ Google Earth Engine initialized")
+    ee.Initialize(credentials, project=settings.GEE_PROJECT_ID)
+    print("✅ Google Earth Engine initialized")
+except Exception as e:
+    print(f"❌ GEE Initialization Failed: {e}")
 
 # ===========================
 # NDVI Analysis Function
 # ===========================
 def analyze_ndvi(coordinates):
+    # Your geometry and collection logic remains the same
     geometry = ee.Geometry.Polygon(coordinates)
 
     collection = (
         ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
         .filterBounds(geometry)
-        .filterDate("2025-06-01", "2026-02-15")
+        .filterDate("2025-06-01", "2026-02-15") #
         .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))
         .sort("system:time_start", False)
     )
