@@ -9,6 +9,8 @@ client = genai.Client(api_key=settings.GEMINI_API_KEY)
 class ChatService:
     @staticmethod
     async def get_farmer_response(question: str, lat: float, lon: float):
+        from core.trigger_data import SUGARCANE_TRIGGERS_JSON
+        
         # 1. Fetch live farm context
         farm_data = await CurrentWeather.get_live_weather(lat, lon)
         
@@ -17,9 +19,16 @@ class ChatService:
         The farmer's current live data is:
         - Temperature: {farm_data.get('temperature')}
         - Humidity: {farm_data.get('humidity')}
+        - Rainfall: {farm_data.get('rainfall', '0 mm')}
         - Soil Moisture: {farm_data.get('soil_moisture')}
         
-        Instructions: Answer ONLY questions related to sugarcane or irrigation.
+        CRITICAL INSTRUCTION: You MUST use ONLY the following trigger conditions and control logic when advising on diseases or pests:
+        {SUGARCANE_TRIGGERS_JSON}
+        
+        CRITICAL BEHAVIOR:
+        1. ONLY provide disease warnings or chemical controls if the user explicitly asks about diseases, pests, health, sprays, or recommendations.
+        2. Do NOT proactively list diseases or warnings if the user is just greeting you or asking a general question (e.g., "Who are you?").
+        3. Answer ONLY questions related to sugarcane or irrigation.
         """
         
         try:
