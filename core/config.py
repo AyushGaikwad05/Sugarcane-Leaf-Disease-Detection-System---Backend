@@ -11,16 +11,16 @@ class Settings:
 
     # 2. Model Metadata
     CLASS_NAMES = [
-        "BacterialBlights",
+        "Deficiencies",
         "Healthy",
-        "Mosaic",
-        "RedRot",
+        "Mawa",
+        "Pest infestation",
         "Rust",
-        "Yellow"
+        "Smut"
     ]
 
     # 3. Paths & Project IDs
-    MODEL_PATH = os.getenv("MODEL_PATH", "saved_models/final-efficientnet_transfer.pth")
+    MODEL_PATH = os.getenv("MODEL_PATH", "saved_models/sugarcane_efficientnet_b1_final.pth")
     GEE_PROJECT_ID = os.getenv("GEE_PROJECT_ID", "aisugarcane")
     GEE_JSON_PATH = os.getenv("GEE_JSON_PATH", "GEE_SERVICE_ACC.json")
     # 4. API Keys
