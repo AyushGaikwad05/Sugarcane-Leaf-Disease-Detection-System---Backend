@@ -10,6 +10,7 @@ class ChatService:
     @staticmethod
     async def get_farmer_response(question: str, lat: float, lon: float):
         from core.trigger_data import SUGARCANE_TRIGGERS_JSON
+        from core.pest_data import PEST_MANAGEMENT_JSON
         
         # 1. Fetch live farm context
         farm_data = await CurrentWeather.get_live_weather(lat, lon)
@@ -29,6 +30,10 @@ class ChatService:
         1. ONLY provide disease warnings or chemical controls if the user explicitly asks about diseases, pests, health, sprays, or recommendations.
         2. Do NOT proactively list diseases or warnings if the user is just greeting you or asking a general question (e.g., "Who are you?").
         3. Answer ONLY questions related to sugarcane or irrigation.
+        
+        PEST MANAGEMENT GUIDELINES:
+        {PEST_MANAGEMENT_JSON}
+        You MUST use this data to advise on pest management IF AND ONLY IF the user explicitly asks about pests or treatments.
         """
         
         try:
